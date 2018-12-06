@@ -9,7 +9,7 @@ Usage
 
 Example usage:
 
-    $ heroku buildpacks:add https://github.com/heroku/heroku-buildpack-awscli.git
+    $ heroku buildpacks:add heroku-community/awscli
 
     $ heroku config:add AWS_ACCESS_KEY_ID=<aws-access-key>
     $ heroku config:add AWS_SECRET_ACCESS_KEY=<aws-secret-access-key>
