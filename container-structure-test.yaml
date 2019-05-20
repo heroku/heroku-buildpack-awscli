@@ -1,0 +1,10 @@
+schemaVersion: 2.0.0
+fileExistenceTests:
+  - name: 'awscli'
+    path: '/tmp/build/.awscli/bin/aws'
+    shouldExist: true
+    permissions: '-rwxr-xr-x'
+  - name: 'profile-d'
+    path: '/tmp/build/.profile.d/awscli.sh'
+    shouldExist: true
+    permissions: '-rw-r--r--'
