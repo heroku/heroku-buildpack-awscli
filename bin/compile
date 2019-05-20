@@ -19,28 +19,28 @@ BUILD_DIR=$1
 CACHE_DIR=$2
 
 BUILDPACK_DIR="$(dirname $(dirname $0))"
+INSTALL_DIR="/app/.awscli"
 
 echo "-----> Installing AWS CLI"
 curl --silent --show-error -o /tmp/awscli-bundle.zip "$AWS_CLI_URL" |& indent
-unzip -qq -d "$BUILD_DIR/vendor" /tmp/awscli-bundle.zip |& indent
+unzip -qq -d "$BUILD_DIR/.awscli" /tmp/awscli-bundle.zip |& indent
 
 # Since build-dir isn't guaranteed to be /app, move whatever's in /app's awscli
 # dir out of the way. The installer uses virtualenv, which means it must be
 # installed in the final location - we have to install into /app.
 rm -rf /tmp/awscli
-[ -e /app/vendor/awscli ] && mv /app/vendor/awscli /tmp/awscli
+[ -e $INSTALL_DIR ] && mv $INSTALL_DIR /tmp/awscli
 
-INSTALL_DIR="/app/vendor/awscli"
-"$BUILD_DIR/vendor/awscli-bundle/install" -i "$INSTALL_DIR" |& indent
+"$BUILD_DIR/.awscli/awscli-bundle/install" -i "$INSTALL_DIR" |& indent
 
-mv /app/vendor/awscli "$BUILD_DIR/vendor/awscli"
+mv $INSTALL_DIR "$BUILD_DIR/.awscli"
 
 # Restore the moved awscli dir, if it exists.
-[ -e /tmp/awscli ] && mv /tmp/awscli /app/vendor/awscli
+[ -e /tmp/awscli ] && mv /tmp/awscli $INSTALL_DIR
 
 mkdir -p $BUILD_DIR/.profile.d
 cat > "$BUILD_DIR/.profile.d/awscli.sh" <<'PROFILE'
-export PATH="$HOME/vendor/awscli/bin:$PATH"
+export PATH="$HOME/.awscli/bin:$PATH"
 PROFILE
 
 #cleaning up...
