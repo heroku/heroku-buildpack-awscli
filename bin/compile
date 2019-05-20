@@ -29,14 +29,14 @@ unzip -qq -d "$BUILD_DIR/.awscli" /tmp/awscli-bundle.zip |& indent
 # dir out of the way. The installer uses virtualenv, which means it must be
 # installed in the final location - we have to install into /app.
 rm -rf /tmp/awscli
-[ -e /app/.awscli ] && mv /app/.awscli /tmp/awscli
+[ -e $INSTALL_DIR ] && mv $INSTALL_DIR /tmp/awscli
 
 "$BUILD_DIR/.awscli/awscli-bundle/install" -i "$INSTALL_DIR" |& indent
 
-mv /app/.awscli "$BUILD_DIR/.awscli"
+mv $INSTALL_DIR "$BUILD_DIR/.awscli"
 
 # Restore the moved awscli dir, if it exists.
-[ -e /tmp/awscli ] && mv /tmp/awscli /app/.awscli
+[ -e /tmp/awscli ] && mv /tmp/awscli $INSTALL_DIR
 
 mkdir -p $BUILD_DIR/.profile.d
 cat > "$BUILD_DIR/.profile.d/awscli.sh" <<'PROFILE'
