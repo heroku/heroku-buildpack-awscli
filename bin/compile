@@ -33,7 +33,9 @@ rm -rf /tmp/awscli
 
 "$BUILD_DIR/.awscli/awscli-bundle/install" -i "$INSTALL_DIR" |& indent
 
-mv $INSTALL_DIR "$BUILD_DIR/.awscli"
+if [ "$BUILD_DIR" != "/app" ]; then
+  mv $INSTALL_DIR "$BUILD_DIR/.awscli"
+fi
 
 # Restore the moved awscli dir, if it exists.
 [ -e /tmp/awscli ] && mv /tmp/awscli $INSTALL_DIR
