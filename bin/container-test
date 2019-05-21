@@ -1,0 +1,10 @@
+#!/bin/sh -eu
+
+tagName="heroku-buildpack-awscli"
+
+echo "Testing Buildpack with Docker"
+docker build -t $tagName -f Dockerfile .
+
+$HOME/bin/container-structure-test test \
+  --image $tagName \
+  --config container-structure-test.yaml

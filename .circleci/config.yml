@@ -1,0 +1,25 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:latest
+    steps:
+      - checkout
+      - run:
+          name: Install Container Structure Test
+          command: |
+            curl -fLO https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64 && \
+            chmod +x container-structure-test-linux-amd64 && \
+            mkdir -p $HOME/bin && \
+            mv container-structure-test-linux-amd64 $HOME/bin/container-structure-test \
+      - setup_remote_docker:
+          docker_layer_caching: true
+          version: 18.09.3
+      - run:
+          name: Run tests
+          command: ./bin/container-test
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build
