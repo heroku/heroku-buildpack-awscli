@@ -31,8 +31,8 @@ unzip -qq -d "$BUILD_DIR/.awscli" /tmp/awscli-bundle.zip |& indent
 rm -rf /tmp/awscli
 
 # Since $BUILD_DIR can be /app, we can only move $INSTALL_DIR if it's not the same.
-if [ "$INSTALL_DIR" != "$BUILD_DIR/.awscli" ]; then
-  [ -e $INSTALL_DIR ] && mv $INSTALL_DIR /tmp/awscli
+if [ "$INSTALL_DIR" != "$BUILD_DIR/.awscli" ] && [ -e $INSTALL_DIR ]; then
+  mv $INSTALL_DIR /tmp/awscli
 fi
 
 "$BUILD_DIR/.awscli/awscli-bundle/install" -i "$INSTALL_DIR" |& indent
