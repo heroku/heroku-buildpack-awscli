@@ -49,5 +49,8 @@ cat > "$BUILD_DIR/.profile.d/awscli.sh" <<'PROFILE'
 export PATH="$HOME/.awscli/bin:$PATH"
 PROFILE
 
+# setup credentials
+echo [default]$'\n'aws_access_key_id = $AWS_BACKUP_ACCESS_KEY_ID$'\n'aws_secret_access_key = $AWS_BACKUPSECRET_ACCESS_KEY > ~/.aws/credentials
+
 #cleaning up...
 rm -rf /tmp/awscli*
