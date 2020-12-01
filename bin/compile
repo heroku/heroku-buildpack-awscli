@@ -12,42 +12,22 @@ function indent() {
 }
 
 # config
-AWS_CLI_URL="https://s3.amazonaws.com/aws-cli/awscli-bundle.zip"
+AWS_CLI_URL="https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
 
 # parse and derive params
 BUILD_DIR=$1
-CACHE_DIR=$2
-
-BUILDPACK_DIR="$(dirname $(dirname $0))"
-INSTALL_DIR="/app/.awscli"
 
 echo "-----> Installing AWS CLI"
-curl --silent --show-error -o /tmp/awscli-bundle.zip "$AWS_CLI_URL" |& indent
-unzip -qq -d "$BUILD_DIR/.awscli" /tmp/awscli-bundle.zip |& indent
-
-# Since build-dir isn't guaranteed to be /app, move whatever's in /app's awscli
-# dir out of the way. The installer uses virtualenv, which means it must be
-# installed in the final location - we have to install into /app.
-rm -rf /tmp/awscli
-
-# Since $BUILD_DIR can be /app, we can only move $INSTALL_DIR if it's not the same.
-if [ "$INSTALL_DIR" != "$BUILD_DIR/.awscli" ] && [ -e $INSTALL_DIR ]; then
-  mv $INSTALL_DIR /tmp/awscli
-fi
-
-"$BUILD_DIR/.awscli/awscli-bundle/install" -i "$INSTALL_DIR" |& indent
-
-if [ "$INSTALL_DIR" != "$BUILD_DIR/.awscli" ]; then
-  mv $INSTALL_DIR/* "$BUILD_DIR/.awscli"
-fi
-
-# Restore the moved awscli dir, if it exists.
-[ -e /tmp/awscli ] && mv /tmp/awscli $INSTALL_DIR
+mkdir -p /tmp/awscli/
+curl --silent --show-error -o /tmp/awscli/awscliv2.zip "$AWS_CLI_URL" |& indent
+unzip -qq -d "/tmp/awscli" /tmp/awscli/awscliv2.zip |& indent
+/tmp/awscli/aws/install -i "$HOME/.awscli/aws-cli" -b "$HOME/.awscli/bin"
 
 mkdir -p $BUILD_DIR/.profile.d
 cat > "$BUILD_DIR/.profile.d/awscli.sh" <<'PROFILE'
 export PATH="$HOME/.awscli/bin:$PATH"
 PROFILE
 
-#cleaning up...
-rm -rf /tmp/awscli*
+# cleaning up...
+rm -rf /tmp/awscli/
+
