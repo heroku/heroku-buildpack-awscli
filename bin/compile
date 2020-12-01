@@ -11,43 +11,44 @@ function indent() {
   esac
 }
 
-# config
-AWS_CLI_URL="https://s3.amazonaws.com/aws-cli/awscli-bundle.zip"
+AWS_CLI_URL="https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
 
-# parse and derive params
 BUILD_DIR=$1
-CACHE_DIR=$2
-
 BUILDPACK_DIR="$(dirname $(dirname $0))"
 INSTALL_DIR="/app/.awscli"
+TMP_DIR=$(mktemp -d)
+
+echo "-----> Downloading AWS CLI"
+curl --silent --show-error --fail -o "${TMP_DIR}/awscliv2.zip" "${AWS_CLI_URL}" |& indent
+unzip -qq -d "${TMP_DIR}" "${TMP_DIR}/awscliv2.zip" |& indent
 
 echo "-----> Installing AWS CLI"
-curl --silent --show-error -o /tmp/awscli-bundle.zip "$AWS_CLI_URL" |& indent
-unzip -qq -d "$BUILD_DIR/.awscli" /tmp/awscli-bundle.zip |& indent
+mkdir -p "${BUILD_DIR}/.awscli"
 
-# Since build-dir isn't guaranteed to be /app, move whatever's in /app's awscli
-# dir out of the way. The installer uses virtualenv, which means it must be
-# installed in the final location - we have to install into /app.
-rm -rf /tmp/awscli
-
-# Since $BUILD_DIR can be /app, we can only move $INSTALL_DIR if it's not the same.
-if [ "$INSTALL_DIR" != "$BUILD_DIR/.awscli" ] && [ -e $INSTALL_DIR ]; then
-  mv $INSTALL_DIR /tmp/awscli
+# The AWS installer creates symlinks that use absolute paths, as such the install
+# location must match the location from which the CLI is eventually run.
+# At runtime the app will be run from /app, however at build time $BUILD_DIR is
+# typically a path under /tmp (unless a Heroku CI build, in which case it's /app).
+# In order to make all cases work, we have to create a symlink from /app to $BUILD_DIR,
+# so that we can use `/app` paths for the installer, so that the symlinks it creates
+# will use /app paths. A symlink is used instead of file copying to improve build times.
+if [[ "${BUILD_DIR}" != /app ]]; then
+  mkdir -p /app
+  ln -nsf "${BUILD_DIR}/.awscli" "${INSTALL_DIR}"
 fi
 
-"$BUILD_DIR/.awscli/awscli-bundle/install" -i "$INSTALL_DIR" |& indent
+"${TMP_DIR}/aws/install" --install-dir "${INSTALL_DIR}/aws-cli" --bin-dir "${INSTALL_DIR}/bin" |& indent
+/app/.awscli/bin/aws --version |& indent
 
-if [ "$INSTALL_DIR" != "$BUILD_DIR/.awscli" ]; then
-  mv $INSTALL_DIR/* "$BUILD_DIR/.awscli"
-fi
-
-# Restore the moved awscli dir, if it exists.
-[ -e /tmp/awscli ] && mv /tmp/awscli $INSTALL_DIR
-
-mkdir -p $BUILD_DIR/.profile.d
-cat > "$BUILD_DIR/.profile.d/awscli.sh" <<'PROFILE'
-export PATH="$HOME/.awscli/bin:$PATH"
+mkdir -p "${BUILD_DIR}/.profile.d"
+cat > "${BUILD_DIR}/.profile.d/awscli.sh" <<'PROFILE'
+export PATH="/app/.awscli/bin:${PATH}"
 PROFILE
 
-#cleaning up...
-rm -rf /tmp/awscli*
+cat > "${BUILDPACK_DIR}/export" <<'EXPORT'
+export PATH="/app/.awscli/bin:${PATH}"
+EXPORT
+
+rm -rf "${TMP_DIR}"
+
+echo "-----> Successfully installed AWS CLI"
